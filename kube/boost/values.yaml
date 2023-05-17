@@ -124,6 +124,10 @@ Env:
   # Static content cache timeout
   - name: STATIC_CACHE_TIMEOUT
     value: "60"
+  - name: CELERY_BROKER
+    value: redis://redis:6379/0
+  - name: CELERY_BACKEND
+    value: redis://redis:6379/0
 
 # Volumes
 Volumes:
@@ -149,3 +153,4 @@ NginxVolumeMounts:
 
 ingressType: nginx
 redisInstall: false
+celeryInstall: false

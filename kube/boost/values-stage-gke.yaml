@@ -123,6 +123,10 @@ Env:
   # Static content cache timeout
   - name: STATIC_CACHE_TIMEOUT
     value: "60"
+  - name: CELERY_BROKER
+    value: redis://redis:6379/0
+  - name: CELERY_BACKEND
+    value: redis://redis:6379/0
 
 # Volumes
 Volumes:
@@ -153,3 +157,4 @@ ingressType: gce
 managedCertName: managed-cert-boost-stage
 ingressStaticIp: boost-stage-ingress1
 redisInstall: true
+celeryInstall: true
