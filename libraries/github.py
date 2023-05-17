@@ -29,6 +29,7 @@ class GithubAPIClient:
         owner: str = "boostorg",
         ref: str = "heads/master",
         repo_slug: str = "boost",
+        token: str = None,
     ) -> None:
         """
         Initialize the GitHubAPIClient.
@@ -37,7 +38,7 @@ class GithubAPIClient:
         :param ref: str, the Git reference
         :param repo_slug: str, the repository slug
         """
-        self.api = self.initialize_api()
+        self.api = self.initialize_api(token=token)
         self.owner = owner
         self.ref = ref
         self.repo_slug = repo_slug
@@ -224,7 +225,7 @@ class GithubAPIClient:
                 owner=self.owner, repo=repo_slug, tag=tag_name
             )
         except Exception as e:
-            # logger.info("tag_not_found", tag_name=tag_name, repo_slug=repo_slug)
+            logger.info("tag_not_found", tag_name=tag_name, repo_slug=repo_slug)
             return
 
     def get_tags(self, repo_slug: str = None) -> dict:

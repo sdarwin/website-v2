@@ -107,7 +107,7 @@ class Library(models.Model):
         https://docs.cppalliance.org/user-guide/prev/library_metadata.html"""
         display_names = {
             "98": "C++98",
-            "03": "C98/C03",
+            "03": "C++03",
             "11": "C++11",
             "14": "C++14",
             "17": "C++17",
@@ -155,13 +155,13 @@ class LibraryVersion(models.Model):
     version = models.ForeignKey(
         "versions.Version",
         related_name="library_version",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
     )
     library = models.ForeignKey(
         "libraries.Library",
         related_name="library_version",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
     )
     maintainers = models.ManyToManyField("users.User", related_name="maintainers")
