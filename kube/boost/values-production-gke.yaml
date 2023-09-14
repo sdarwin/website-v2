@@ -23,7 +23,7 @@ initCommands:
 
 publicFqdn: &fqdn boost.cppalliance.org
 publicFqdn2: &fqdn2 boost.org
-publicFqdn3: &fqdn3 placeholder1.boost.cppalliance.org
+publicFqdn3: &fqdn3 placeholder3.boost.cppalliance.org
 
 Env:
   - name: DJANGO_SETTINGS_MODULE
@@ -56,9 +56,9 @@ Env:
   - name: DJANGO_FQDN
     value: *fqdn
   - name: ALLOWED_HOSTS
-    value: "boost.cppalliance.org, www.boost.cppalliance.org, boost.org, www.boost.org, placeholder1.boost.cppalliance.org, www.placeholder1.boost.cppalliance.org"
+    value: "boost.cppalliance.org, www.boost.cppalliance.org, boost.org, www.boost.org, placeholder3.boost.cppalliance.org, www.placeholder3.boost.cppalliance.org"
   - name: CSRF_TRUSTED_ORIGINS
-    value: "http://0.0.0.0, http://localhost, https://boost.cppalliance.org, https://www.boost.cppalliance.org, https://boost.org, https://www.boost.org, https://placeholder1.boost.cppalliance.org, https://www.placeholder1.boost.cppalliance.org"
+    value: "http://0.0.0.0, http://localhost, https://boost.cppalliance.org, https://www.boost.cppalliance.org, https://boost.org, https://www.boost.org, https://placeholder3.boost.cppalliance.org, https://www.placeholder3.boost.cppalliance.org"
 
   # silence django deprecation warnings
   - name: PYTHONWARNINGS
@@ -170,7 +170,7 @@ NginxVolumeMounts:
     mountPath: /run
 
 ingressType: gce
-managedCertName: managed-cert-boost-production
+managedCertName: managed-cert-boost-production,,managed-cert-placeholder3
 secretCertName: boostorgcert
 ingressStaticIp: boost-production-ingress1
 redisInstall: true
