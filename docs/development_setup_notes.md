@@ -5,6 +5,7 @@ The procedure to configure a development environment is mainly covered in the to
 - [Development Setup Notes](#development-setup-notes)
 - [Windows](#windows)
 - [Ubuntu 22.04](#ubuntu-2204)
+- [macOS](#macOS)
 - [Local Development](#local-development)
   - [Social Login with django-allauth](#social-login-with-django-allauth)
 
@@ -43,15 +44,23 @@ Continue (as root) to the instructions in the top-level README.md file.
 
 ## Ubuntu 22.04
 
-Check if python3 is installed.
-```
-python3 --version
-```
+Method 1:
 
-or
+The script dev-bootstrap-linux.sh will automatically install prerequisites, and with the --launch flag will also run docker-compose.
 
 ```
-apt-get install -y python3
+curl -o dev-bootstrap-linux.sh https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-linux.sh
+chmod 755 dev-bootstrap-linux.sh
+./dev-bootstrap-linux.sh
+```
+
+Method 2:
+
+Instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
+
+Install python
+```
+sudo apt-get install -y python3
 ```
 
 Install `makedeb` (as a standard user, not root).
@@ -70,6 +79,15 @@ cd /opt/justinstall
 git clone 'https://mpr.makedeb.org/just'
 cd just
 makedeb -si
+```
+
+Install nvm, npm, and yarn, if not installed.
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+. ~/.bashrc
+nvm install 20
+nvm use 20
+npm install -g yarn
 ```
 
 Install docker and docker-compose.
@@ -100,9 +118,85 @@ cd website-v2
 cp env.template .env
 ```
 
+Edit the .env, adding AWS keys.
+
 Continue (as the root user) to the instructions in the top-level README.md file. Or if using WSL, review the last few steps in that section again.
 
-The advantage of running `docker compose` as root is the userid (0) will match the containers and the shared files.
+On Linux, the advantage of running `docker compose` as root is the userid (0) will match the containers and the shared files. Another option is
+to install Docker Desktop, which would allow you to stay as a regular user.  
+
+## macOS
+
+Method 1: 
+
+The script dev-bootstrap-macos.sh will automatically install prerequisites, and with the --launch flag will also run docker-compose.
+
+```
+curl -o dev-bootstrap-macos.sh https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-macos.sh
+chmod 755 dev-bootstrap-macos.sh
+./dev-bootstrap-macos.sh
+```
+
+Method 2:
+
+Instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.  
+
+Install brew
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Install rosetta
+```
+sudo softwareupdate --install-rosetta --agree-to-license
+```
+
+Install git
+```
+brew install git
+```
+
+Install python
+```
+brew install python3
+```
+
+Install just
+```
+brew install just
+```
+
+Install nvm, npm, and yarn
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+. ~/.zprofile
+nvm install 20
+nvm use 20
+npm install -g yarn
+```
+
+Install docker and docker-compose
+```
+curl -o /tmp/Docker.dmg https://desktop.docker.com/mac/main/arm64/160616/Docker.dmg
+sudo hdiutil attach /tmp/Docker.dmg
+sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+sudo hdiutil detach /Volumes/Docker
+```
+
+In a desktop GUI window, run Docker Desktop, and complete the installation.
+
+Clone the repository and switch to that directory.
+```
+mkdir -p ~/github/_your_user_name_
+cd ~/github/_your_user_name_
+git clone https://github.com/_your_user_name_/website-v2
+cd website-v2
+cp env.template .env
+```
+
+Edit the .env, adding AWS keys.
+
+Continue to the instructions in the top-level README.md file. 
 
 ## Local Development
 
