@@ -21,7 +21,18 @@ fi
 
 # set defaults:
 prereqsoption="yes"
-repo_path_base=${HOME}/github
+# docker_mode either "native" or "desktop" (Docker Desktop). macos only support "desktop" currently.
+docker_mode="desktop"
+
+if [[ ${docker_mode} == "native" ]]; then
+    # Not supported on macos currently, or ever.
+    repo_path_base="/opt/github"
+    completion_message_1="When doing development work, switch to the root user 'sudo su -', cd to that directory location, and run 'docker compose up -d'"
+fi
+if [[ ${docker_mode} == "desktop" ]]; then
+    repo_path_base="${HOME}/github"
+    completion_message_1="When doing development work, cd to that directory location, and run 'docker compose up -d'"
+fi
 
 # git and getopt are required. If they are not installed, moving that part of the installation process
 # to an earlier part of the script:
@@ -106,6 +117,7 @@ echo "Chosen options: pre: $prereqsoption launch: $launchoption repo: $repooptio
 
 detected_repo_url=$(git config --get remote.origin.url 2> /dev/null || echo "empty")
 detected_repo_name=$(basename -s .git "$(git config --get remote.origin.url)" 2> /dev/null || echo "empty")
+# Currently unused. Could be uncommented if needed:
 # detected_repo_org=$(basename $(dirname "${detected_repo_url}"))
 detected_repo_path=$(git rev-parse --show-toplevel 2> /dev/null || echo "nofolder")
 detected_repo_path_base=$(dirname "${detected_repo_path}")
@@ -201,6 +213,7 @@ if [[ "$prereqsoption" == "yes" ]]; then
     if ! command -v nvm &> /dev/null
     then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+        # shellcheck source=/dev/null
         . ~/.zprofile
         nvm install 20
         nvm use 20
@@ -233,11 +246,19 @@ if [[ "$prereqsoption" == "yes" ]]; then
     fi
 
     echo "The installation section of this script is complete."
+    echo "The location of your docker compose installation is ${repo_path}."
+    echo ""
+    if [[ "$launchoption" != "yes" ]]; then
+        echo "You may run this script again with the --launch option, to launch docker compose and run db migrations".
+        echo ""
+    fi
+    echo "${completion_message_1}"
 fi
 
 if [[ "$launchoption" == "yes" ]]; then
     if ! command -v nvm &> /dev/null
     then
+        # shellcheck source=/dev/null
         . ~/.zprofile
     fi
 
