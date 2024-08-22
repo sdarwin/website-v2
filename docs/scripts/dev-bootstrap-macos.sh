@@ -21,7 +21,7 @@ fi
 
 # set defaults:
 prereqsoption="yes"
-repo_path_base=${HOME}/github/
+repo_path_base=${HOME}/github
 
 # git and getopt are required. If they are not installed, moving that part of the installation process
 # to an earlier part of the script:

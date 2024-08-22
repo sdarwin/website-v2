@@ -14,7 +14,7 @@ scriptname="dev-bootstrap-linux.sh"
 
 # set defaults:
 prereqsoption="yes"
-repo_path_base=${HOME}/github/
+repo_path_base=${HOME}/github
 shell_startup_script=.bashrc
 
 # READ IN COMMAND-LINE OPTIONS
