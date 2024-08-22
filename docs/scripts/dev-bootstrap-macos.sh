@@ -28,10 +28,14 @@ if [[ ${docker_mode} == "native" ]]; then
     # Not supported on macos currently, or ever.
     repo_path_base="/opt/github"
     completion_message_1="When doing development work, switch to the root user 'sudo su -', cd to that directory location, and run 'docker compose up -d'"
+    possible_sudo="sudo"
+    shell_initialization_file=/Users/root/.zprofile
 fi
 if [[ ${docker_mode} == "desktop" ]]; then
     repo_path_base="${HOME}/github"
     completion_message_1="When doing development work, cd to that directory location, and run 'docker compose up -d'"
+    possible_sudo=""
+    shell_initialization_file=~/.zprofile
 fi
 
 # git and getopt are required. If they are not installed, moving that part of the installation process
@@ -142,7 +146,7 @@ else
         echo "You have specified a repository on the command line. That will be preferred. ${repooption}"
         repo_url=${repooption}
     else 
-        echo "Please enter a full git repository url with a format such as https:://github.com/boostorg/website-v2"
+        echo "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
         read -r repo_url
     fi
     repo_name=$(basename -s .git "$repo_url" 2> /dev/null || echo "empty")
@@ -151,14 +155,14 @@ else
     repo_path_base="${repo_path_base}/${repo_org}"
     repo_path="${repo_path_base}/${repo_name}"
     echo "The path will be ${repo_path}"
-    mkdir -p "${repo_path_base}"
+    ${possible_sudo} mkdir -p "${repo_path_base}"
     cd "${repo_path_base}"
     if [ ! -d "${repo_name}" ]; then
-        git clone "${repo_url}"
+        ${possible_sudo} git clone "${repo_url}"
     fi
     cd "${repo_name}"
     if [ ! -f .env ]; then
-        cp env.template .env
+        ${possible_sudo} cp env.template .env
     fi
 fi
 

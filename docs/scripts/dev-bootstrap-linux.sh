@@ -16,16 +16,19 @@ scriptname="dev-bootstrap-linux.sh"
 prereqsoption="yes"
 # docker_mode either "native" or "desktop" (Docker Desktop). Only support "native" currently.
 docker_mode="native"
-shell_startup_script=.bashrc
-docker_explanation="On Linux, there are two ways to run Docker. Either the standard native docker installation, or Docker Desktop, which runs inside a virtual machine. The most basic and common situation is most likely standard docker, so that is what is supported by this script currently. In the future, perhaps Docker Desktop support could be added.  Each method has pros and cons.  It's important that the user inside the Django containers is the same as the user on the host machine outside the containers, so that file ownership matches up.  Since the user is 'root' inside the containers, it should be 'root' on the host machine.  Therefore, after getting set up with this script, any development work should be done as 'root'.  That means, run 'sudo su -' before using docker-compose.  Docker Desktop would be an alternative to that requirement."
+docker_explanation="On Linux, there are two ways to run Docker. Either the standard native docker installation, or Docker Desktop, which runs inside a virtual machine. The most basic and common situation is standard docker, so that is what is supported by this script currently. In the future, perhaps Docker Desktop support could be added.  Each method has pros and cons.  It's important that the user inside the Django containers is the same as the user on the host machine outside the containers, so that file ownership matches up.  Since the user is 'root' inside the containers, it should be 'root' on the host machine.  Therefore, after getting set up with this script, any development work should be done as 'root'.  That means, run 'sudo su -' before using docker-compose.  Docker Desktop would be an alternative to that requirement, and allow running as a regular user account. But with some downside, that it is not 'standard' Docker, anymore."
 
 if [[ ${docker_mode} == "native" ]]; then
     repo_path_base="/opt/github"
-    completion_message_1="When doing development work, switch to the root user 'sudo su -', cd to that directory location, and run 'docker compose up -d'. NOTE: you must be 'root' when using this setup."
+    completion_message_1="When doing development work, switch to the root user 'sudo su -', cd to that directory location, and run 'docker compose up -d'. While this script works as a normal user, you should be 'root' when running docker compose."
+    possible_sudo="sudo"
+    shell_initialization_file=/root/.bashrc
 fi
 if [[ ${docker_mode} == "desktop" ]]; then
     repo_path_base="${HOME}/github"
     completion_message_1="When doing development work, cd to that directory location, and run 'docker compose up -d'"
+    possible_sudo=""
+    shell_initialization_file=~/.bashrc
 fi
 
 # READ IN COMMAND-LINE OPTIONS
@@ -96,7 +99,7 @@ elif [[ -n "${detected_repo_url}" && "${detected_repo_url}" != "empty" ]]; then
         echo "The script is currently running in 'native' mode, however a non-root user owns the repository folder."
         echo "The choices are:"
         echo "1. cd outside the current repo folder, and re-run the script, so that it can set things up as 'root'"
-        echo "2. Install 'Docker Desktop', and switch the mode of this script to 'Docker Desktop' mode. Not yet supported."
+        echo "2. Install 'Docker Desktop', and switch the mode of this script to 'Docker Desktop' mode. (Not yet supported)."
         echo ""
         echo "Exiting"
         exit 1
@@ -115,7 +118,7 @@ else
         echo "You have specified a repository on the command line. That will be preferred. ${repooption}"
         repo_url=${repooption}
     else 
-        echo "Please enter a full git repository url with a format such as https:://github.com/boostorg/website-v2"
+        echo "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
         read -r repo_url
     fi
     repo_name=$(basename -s .git "$repo_url" 2> /dev/null || echo "empty")
@@ -124,14 +127,14 @@ else
     repo_path_base="${repo_path_base}/${repo_org}"
     repo_path="${repo_path_base}/${repo_name}"
     echo "The path will be ${repo_path}"
-    mkdir -p "${repo_path_base}"
+    ${possible_sudo} mkdir -p "${repo_path_base}"
     cd "${repo_path_base}"
     if [ ! -d "${repo_name}" ]; then
-        git clone "${repo_url}"
+        ${possible_sudo} git clone "${repo_url}"
     fi
     cd "${repo_name}"
     if [ ! -f .env ]; then
-        cp env.template .env
+        ${possible_sudo} cp env.template .env
     fi
 fi
 
@@ -162,7 +165,7 @@ if [[ "$prereqsoption" == "yes" ]]; then
 
     # sudo apt-get update
     x="\$nrconf{restart} = 'a';"
-    echo "$x" | sudo tee /etc/needrestart/conf.d/90-autorestart.conf
+    echo "$x" | sudo tee /etc/needrestart/conf.d/90-autorestart.conf 1>/dev/null
 
     if ! command -v makedeb &> /dev/null
     then
@@ -195,19 +198,36 @@ if [[ "$prereqsoption" == "yes" ]]; then
         cd "$startdir"
     fi
 
-    if ! command -v nvm &> /dev/null
-    then
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-        # shellcheck source=/dev/null
-        . ${shell_startup_script}
-        nvm install 20
-        nvm use 20
-        echo "Run . ${shell_startup_script} to enable nvm"
+    if [[ ${docker_mode} == "native" ]]; then
+        if ! sudo bash -i -c 'command -v nvm &> /dev/null'
+        then
+            sudo curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | sudo bash
+            # shellcheck source=/dev/null
+            sudo bash -i -c 'nvm install 20; nvm use 20'
+            echo "Run . ${shell_initialization_file} to enable nvm"
+        fi
+    else
+        if ! command -v nvm &> /dev/null
+        then
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+            # shellcheck source=/dev/null
+            . ${shell_initialization_file}
+            nvm install 20
+            nvm use 20
+            echo "Run . ${shell_initialization_file} to enable nvm"
+        fi
     fi
 
-    if ! command -v yarn &> /dev/null
-    then
-        npm install -g yarn
+    if [[ ${docker_mode} == "native" ]]; then
+        if ! sudo bash -i -c 'command -v yarn &> /dev/null'
+        then
+            sudo bash -i -c 'npm install -g yarn'
+        fi
+    else
+        if ! command -v yarn &> /dev/null
+        then
+            npm install -g yarn
+        fi
     fi
 
     if ! docker compose &> /dev/null ; then
@@ -227,10 +247,13 @@ if [[ "$prereqsoption" == "yes" ]]; then
     # "Add current user to docker group"
     sudo usermod -aG docker "$USER"
 
-    if ! id | grep docker; then
-        echo "Your user account has just been added to the 'docker' group. Please log out and log in again. Check groups with the id command."
-        echo "The installation section of this script is complete. After logging in again, you may proceed to manually running docker compose."
-	echo "Or run this script again with --launch to start containers."
+    if [[ ${docker_mode} == "desktop" ]]; then
+        if ! id | grep docker 1>/dev/null
+        then
+            echo "Your user account has just been added to the 'docker' group. Please log out and log in again. Check groups with the id command."
+            echo "The installation section of this script is complete. After logging in again, you may proceed to manually running docker compose."
+            echo "Or run this script again with --launch to start containers."
+        fi
     fi
 
     echo "The 'installation' section of this script is complete."
@@ -244,27 +267,33 @@ if [[ "$prereqsoption" == "yes" ]]; then
 fi
 
 if [[ "$launchoption" == "yes" ]]; then
-    if ! command -v nvm &> /dev/null
-    then
-        # shellcheck source=/dev/null
-        . ${shell_startup_script}
+    if [[ "${docker_mode}" == "desktop" ]]; then
+        if ! command -v nvm &> /dev/null
+        then
+            # shellcheck source=/dev/null
+            . ${shell_initialization_file}
+        fi
     fi
 
     cd "${repo_path}"
     echo "Launching docker compose"
     echo "Let's wait for that to run. Sleeping 60 seconds."
-    docker compose up -d
+    ${possible_sudo} docker compose up -d
     sleep 60
     echo "Creating superuser"
-    docker compose run --rm web python manage.py createsuperuser
+    ${possible_sudo} docker compose run --rm web python manage.py createsuperuser
     echo "Creating database migrations"
-    docker compose run --rm web python manage.py makemigrations 
+    ${possible_sudo} docker compose run --rm web python manage.py makemigrations
     echo "running database migrations"
-    docker compose run --rm web python manage.py migrate
+    ${possible_sudo} docker compose run --rm web python manage.py migrate
     echo "Running yarn"
-    yarn
-    yarn build
-    cp static/css/styles.css static_deploy/css/styles.css
+    if [[ "${possible_sudo}" == "sudo" ]]; then
+        sudo bash -i -c 'yarn; yarn build; cp static/css/styles.css static_deploy/css/styles.css'
+    else
+        yarn
+        yarn build
+        cp static/css/styles.css static_deploy/css/styles.css
+    fi
     echo "In your browser, visit http://localhost:8000"
     echo "Later, to shut down: docker compose down"
 fi

@@ -171,7 +171,7 @@ else {
         ${repo_url}=${repooption}
 	}
     else {
-        $repo_url = Read-Host "Please enter a full git repository url with a format such as https:://github.com/boostorg/website-v2"
+        $repo_url = Read-Host "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
     }
 
 	if ($repo_url)  {
