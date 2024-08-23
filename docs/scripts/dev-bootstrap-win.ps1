@@ -3,6 +3,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
 
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '')]
 
 param (
    [Parameter(Mandatory=$false)][alias("repo")][string]$repooption = "",
@@ -14,7 +15,6 @@ param (
 # set defaults:
 ${prereqsoption}="yes"
 $scriptname="dev-bootstrap-win.ps1"
-$pythonvirtenvpath="${HOME}\venvboostdocs"
 
 # docker_mode either "native" or "desktop" (Docker Desktop). win only support "desktop" currently.
 docker_mode="desktop"
@@ -23,17 +23,17 @@ if (${docker_mode} -eq "native")
 {
     # Not supported on win currently, or ever.
     ${repo_path_base}="/opt/github"
-    ${completion_message_1}="When doing development work, switch to the root user 'sudo su -', cd to that directory location, and run 'docker compose up -d'"
+    ${completion_message_1}="When doing development work, switch to the root user 'sudo su -', Set-Location to that directory location, and run 'docker compose up -d'"
 }
 if (${docker_mode} -eq "desktop")
 {
     ${repo_path_base}="${HOME}/github"
-    ${completion_message_1}="When doing development work, cd to that directory location, and run 'docker compose up -d'"
+    ${completion_message_1}="When doing development work, Set-Location to that directory location, and run 'docker compose up -d'"
 }
 
 # Set-PSDebug -Trace 1
 
-if ($help) 
+if ($help)
 {
 
 $helpmessage="
@@ -48,25 +48,23 @@ optional arguments:
   -all                  Both packages and launch.
 "
 
-echo $helpmessage
+Write-Output $helpmessage
 exit 0
 }
 
-if ($launch) 
+if ($launch)
 {
     ${launchoption} = "yes"
 	${prereqsoption}="no"
 }
 
-if ($all) 
+if ($all)
 {
     ${launchoption} = "yes"
 	${prereqsoption}="yes"
 }
 
-pushd
-
-function refenv 
+function refenv
 {
 
     # Make `refreshenv` available right away, by defining the $env:ChocolateyInstall
@@ -75,9 +73,9 @@ function refenv
     $env:ChocolateyInstall = Convert-Path "$((Get-Command choco).Path)\..\.."
     Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 
-    # refreshenv might delete path entries. Return those to the path.
+    # refreshenv (Update-SessionEnvironment) might delete path entries. Return those to the path.
     $originalpath=$env:PATH
-    refreshenv
+    Update-SessionEnvironment
     $joinedpath="${originalpath};$env:PATH"
     $joinedpath=$joinedpath.replace(';;',';')
     $env:PATH = ($joinedpath -split ';' | Select-Object -Unique) -join ';'
@@ -87,30 +85,30 @@ function refenv
 # here to an earlier part of the script:
 
 
-if ( -Not (Get-Command choco -errorAction SilentlyContinue) ) 
+if ( -Not (Get-Command choco -errorAction SilentlyContinue) )
 {
-    echo "Install chocolatey"
-    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
-	refenv
+    Write-Output "Install chocolatey"
+    Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+    refenv
 }
 
-if ( -Not (Get-Command git -errorAction SilentlyContinue) ) 
+if ( -Not (Get-Command git -errorAction SilentlyContinue) )
 {
-    echo "Install git"
+    Write-Output "Install git"
     choco install -y --no-progress git
     refenv
 }
 
-echo "Chosen options: pre: ${prereqsoption} launch: ${launchoption} repo: ${repooption}"
+Write-Output "Chosen options: pre: ${prereqsoption} launch: ${launchoption} repo: ${repooption}"
 
 # Determine git repo
 
 $originurl=git config --get remote.origin.url
-if ($LASTEXITCODE -eq 0)  
+if ($LASTEXITCODE -eq 0)
 {
     ${detected_repo_url}=[io.path]::ChangeExtension($originurl, [NullString]::Value)
 }
-else 
+else
 {
     ${detected_repo_url}="empty"
 }
@@ -118,73 +116,73 @@ else
 ## detected_repo_org=$(basename $(dirname "${detected_repo_url}"))
 
 $repopath=git rev-parse --show-toplevel
-if ($LASTEXITCODE -eq 0)  
+if ($LASTEXITCODE -eq 0)
 {
-    ${detected_repo_path}=$repopath | % {$_ -replace '/','\'} 
+    ${detected_repo_path}=$repopath | ForEach-Object {$_ -replace '/','\'}
 }
-else 
+else
 {
     ${detected_repo_path}="nofolder"
 }
 
 ${detected_repo_path_base}=[io.path]::GetDirectoryName($detected_repo_path)
 
-if ( ${detected_repo_url} -and -not (${detected_repo_url} -eq "empty") -and ${repooption} ) 
+if ( ${detected_repo_url} -and -not (${detected_repo_url} -eq "empty") -and ${repooption} )
 {
-    echo "You have specified a repo, but you are also running this script from within a repo."
-    echo "This is indeterminate. Choose one or the other. Exiting."
+    Write-Output "You have specified a repo, but you are also running this script from within a repo."
+    Write-Output "This is indeterminate. Choose one or the other. Exiting."
     exit 1
 }
 elseif ( ${detected_repo_url} -and -not (${detected_repo_url} -eq "empty") )
 {
-    echo "You are running the script from an existing repository. That will be used."
+    Write-Output "You are running the script from an existing repository. That will be used."
     ${repo_url}=${detected_repo_url}
     ${repo_name}=${detected_repo_name}
     ${repo_path}=${detected_repo_path}
     ${repo_path_base}=${detected_repo_path_base}
-    echo "The repo path is ${repo_path}"
-    cd "${repo_path}"
+    Write-Output "The repo path is ${repo_path}"
+    Set-Location "${repo_path}"
     if ( !(Test-Path .env ) )
-{ 
-        cp env.template .env
-        }
+    {
+        Copy-Item env.template .env
+    }
 }
-else 
+else
 {
-    if (${repooption} ) 
-{
-        echo "You have specified a repository on the command line. That will be preferred. ${repooption}"
+    if (${repooption} )
+    {
+        Write-Output "You have specified a repository on the command line. That will be preferred. ${repooption}"
         ${repo_url}=${repooption}
 	}
-    else 
-        {
+    else
+    {
         $repo_url = Read-Host "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
     }
 
-	if ($repo_url)  
-        {
+	if ($repo_url)
+    {
         ${repo_name}=[io.path]::GetFileNameWithoutExtension($repo_url)
-        }
-    else 
+    }
+    else
     {
         ${detected_repo_url}="empty"
     }
-	
-    ${repo_org_part_1}=[io.path]::GetDirectoryName($repo_url) 
+
+    ${repo_org_part_1}=[io.path]::GetDirectoryName($repo_url)
     ${repo_org}=[io.path]::GetFileNameWithoutExtension($repo_org_part_1)
     ${repo_path_base}="${repo_path_base}/${repo_org}"
     ${repo_path}="${repo_path_base}/${repo_name}"
-    echo "The path will be ${repo_path}"
+    Write-Output "The path will be ${repo_path}"
     mkdir -p "${repo_path_base}"
-    cd "${repo_path_base}"
-    if ( !(Test-Path -Path ${repo_path})) 
+    Set-Location "${repo_path_base}"
+    if ( !(Test-Path -Path ${repo_path}))
     {
         git clone "${repo_url}"
     }
-    cd "${repo_name}"
-    if ( !(Test-Path .env)) 
+    Set-Location "${repo_name}"
+    if ( !(Test-Path .env))
     {
-        cp env.template .env
+        Copy-Item env.template .env
     }
 }
 
@@ -192,46 +190,46 @@ else
 
 
 $searchresults = Select-String -pattern "STATIC_CONTENT_AWS_ACCESS_KEY_ID" .env | Select-String -pattern "changeme"
-if ($searchresults -eq $null)
+if ($null -eq $searchresults)
 {
     # "No matches found"
-	% 'foo'
-} 
-else 
+	ForEach-Object 'foo'
+}
+else
 {
     "Matches found in the following files"
     $unsetawskey="yes"
 }
 
 $searchresults = Select-String -pattern "STATIC_CONTENT_AWS_SECRET_ACCESS_KEY" .env | Select-String -pattern "changeme"
-if ($searchresults -eq $null) 
+if ($null -eq $searchresults)
 {
     # "No matches found"
-	% 'foo'
-} 
-else 
+	ForEach-Object 'foo'
+}
+else
 {
     "Matches found in the following files"
     $unsetawskey="yes"
 }
 
-if ($unsetawskey) 
-{ 
-    echo "There appears to be aws keys in your .env file that says 'changeme'. Please set them before proceeding."
-    echo "Talk to an administrator or other developer to get the keys."
+if ($unsetawskey)
+{
+    Write-Output "There appears to be aws keys in your .env file that says 'changeme'. Please set them before proceeding."
+    Write-Output "Talk to an administrator or other developer to get the keys."
 	$REPLY = Read-Host "Do you want to continue? y/n"
-    if (($REPLY -eq "y") -or ($REPLY -eq "Y")) 
+    if (($REPLY -eq "y") -or ($REPLY -eq "Y"))
     {
-        echo "we are continuing"
+        Write-Output "we are continuing"
     }
-    else 
+    else
     {
-        echo "did not receive a Yy. Exiting."
+        Write-Output "did not receive a Yy. Exiting."
         exit 1
     }
 }
 
-if ($prereqsoption -eq "yes") 
+if ($prereqsoption -eq "yes")
 {
 
     if ( -Not (Get-Command just -errorAction SilentlyContinue) )
@@ -261,35 +259,35 @@ if ($prereqsoption -eq "yes")
 
     if ( -Not (Get-Command docker -errorAction SilentlyContinue) )
     {
-        echo "Installing Docker Desktop"
+        Write-Output "Installing Docker Desktop"
         choco install -y --no-progress docker-desktop
         refenv
 
-        # echo "The Docker Desktop dmg package has been installed."
-        # echo "The next step is to go to a desktop GUI window on the Mac, run Docker Desktop, and complete the installation."
-        # echo "Then return here."
+        # Write-Output "The Docker Desktop dmg package has been installed."
+        # Write-Output "The next step is to go to a desktop GUI window on the Mac, run Docker Desktop, and complete the installation."
+        # Write-Output "Then return here."
         # read -r -p "Do you want to continue? y/n" -n 1 -r
-        # echo    # (optional) move to a new line
+        # Write-Output    # (optional) move to a new line
         # if [[ $REPLY =~ ^[Yy]$ ]]
         # then
-        #     echo "we are continuing"
+        #     Write-Output "we are continuing"
         # else
-        #     echo "did not receive a Yy. Exiting. You may re-run the script."
+        #     Write-Output "did not receive a Yy. Exiting. You may re-run the script."
         #     exit 1
     }
 
-    echo "The 'installation' section of this script is complete."
-    echo "The location of your docker compose installation is ${repo_path}."
-    echo ""
+    Write-Output "The 'installation' section of this script is complete."
+    Write-Output "The location of your docker compose installation is ${repo_path}."
+    Write-Output ""
     if ( ! ( "launchption" -eq "yes"))
     {
-        echo "You may run this script again with the --launch option, to launch docker compose and run db migrations".
-        echo ""
-    } 
-    echo ${completion_message_1}
+        Write-Output "You may run this script again with the --launch option, to launch docker compose and run db migrations".
+        Write-Output ""
+    }
+    Write-Output ${completion_message_1}
 }
 
-if ("$launchoption" -eq "yes") 
+if ("$launchoption" -eq "yes")
 {
     # is something like this needed on windows? how does it work?
     # if ! command -v nvm &> /dev/null
@@ -297,21 +295,21 @@ if ("$launchoption" -eq "yes")
     #     . ~/.zprofile
     # fi
 
-    cd "${repo_path}"
-    echo "Launching docker compose"
-    echo "Let's wait for that to run. Sleeping 60 seconds."
+    Set-Location "${repo_path}"
+    Write-Output "Launching docker compose"
+    Write-Output "Let's wait for that to run. Sleeping 60 seconds."
     docker compose up -d
     Set-Sleep 60
-    echo "Creating superuser"
+    Write-Output "Creating superuser"
     docker compose run --rm web python manage.py createsuperuser
-    echo "Creating database migrations"
+    Write-Output "Creating database migrations"
     docker compose run --rm web python manage.py makemigrations
-    echo "running database migrations"
+    Write-Output "running database migrations"
     docker compose run --rm web python manage.py migrate
-    echo "Running yarn"
+    Write-Output "Running yarn"
     yarn
     yarn build
-    cp static/css/styles.css static_deploy/css/styles.css
-    echo "In your browser, visit http://localhost:8000"
-    echo "Later, to shut down: docker compose down"
+    Copy-Item static/css/styles.css static_deploy/css/styles.css
+    Write-Output "In your browser, visit http://localhost:8000"
+    Write-Output "Later, to shut down: docker compose down"
 }
