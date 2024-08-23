@@ -12,7 +12,75 @@ The procedure to configure a development environment is mainly covered in the to
 
 ## Windows
 
-(Tested on: Windows 2022 Server)
+Method 1:
+
+The script dev-bootstrap-win.ps1 will automatically install prerequisites, and with the --launch flag will also run docker-compose.
+
+```
+curl -o dev-bootstrap-win.ps1 https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-win.ps1
+.\dev-bootstrap-win.ps1
+```
+
+Method 2:
+
+Instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
+
+Install choco
+```
+iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+# refresh environment
+$env:ChocolateyInstall = Convert-Path "$((Get-Command choco).Path)\..\.."
+Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+refreshenv
+```
+
+Install git
+```
+choco install -y --no-progress git
+```
+
+Install python
+```
+choco install -y --no-progress python
+```
+
+Install just
+```
+choco install -y --no-progress just
+```
+
+Install nvm, npm, and yarn
+```
+choco install -y --no-progress nvm
+refreshenv
+nvm install 20
+nvm use 20
+npm install -g yarn
+```
+
+Install Docker Desktop
+```
+choco install -y --no-progress docker-desktop
+```
+
+In a desktop GUI window, run Docker Desktop, and complete the installation.
+
+Clone the repository and switch to that directory.
+```
+mkdir -p $HOME\github\_your_user_name_
+cd $HOME\github\_your_user_name_
+git clone https://github.com/_your_user_name_/website-v2
+cd website-v2
+cp env.template .env
+```
+
+Edit the .env, adding AWS keys.
+
+Continue to the instructions in the top-level README.md file.
+
+Method 3:
+
+In WSL. This is a more complicated method.
 
 In Powershell, install WSL:
 ```

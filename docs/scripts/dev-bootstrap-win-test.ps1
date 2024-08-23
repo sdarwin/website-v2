@@ -15,11 +15,25 @@ param (
 ${prereqsoption}="yes"
 $scriptname="dev-bootstrap-win.ps1"
 $pythonvirtenvpath="${HOME}\venvboostdocs"
-${repo_path_base}="${HOME}\github"
+
+# docker_mode either "native" or "desktop" (Docker Desktop). win only support "desktop" currently.
+docker_mode="desktop"
+
+if (${docker_mode} -eq "native")
+{
+    # Not supported on win currently, or ever.
+    ${repo_path_base}="/opt/github"
+    ${completion_message_1}="When doing development work, switch to the root user 'sudo su -', cd to that directory location, and run 'docker compose up -d'"
+}
+if (${docker_mode} -eq "desktop")
+{
+    ${repo_path_base}="${HOME}/github"
+    ${completion_message_1}="When doing development work, cd to that directory location, and run 'docker compose up -d'"
+}
 
 # Set-PSDebug -Trace 1
 
-if ($help) 
+if ($help)
 {
 
 $helpmessage="
@@ -152,11 +166,11 @@ else
         ${repo_name}=[io.path]::GetFileNameWithoutExtension($repo_url)
     }
     else 
-	{
+    {
         ${detected_repo_url}="empty"
     }
 	
-	${repo_org_part_1}=[io.path]::GetDirectoryName($repo_url) 
+    ${repo_org_part_1}=[io.path]::GetDirectoryName($repo_url) 
     ${repo_org}=[io.path]::GetFileNameWithoutExtension($repo_org_part_1)
     ${repo_path_base}="${repo_path_base}/${repo_org}"
     ${repo_path}="${repo_path_base}/${repo_name}"
@@ -164,14 +178,14 @@ else
     mkdir -p "${repo_path_base}"
     cd "${repo_path_base}"
     if ( !(Test-Path -Path ${repo_path})) 
-	{
+    {
         git clone "${repo_url}"
     }
     cd "${repo_name}"
-     if ( !(Test-Path .env)) 
-	 {
+    if ( !(Test-Path .env)) 
+    {
         cp env.template .env
-	 }
+    }
 }
 
 # Check .env file
@@ -195,7 +209,8 @@ if ($searchresults -eq $null)
     # "No matches found"
 	% 'foo'
 } 
-else {
+else 
+{
     "Matches found in the following files"
     $unsetawskey="yes"
 }
@@ -205,7 +220,8 @@ if ($unsetawskey)
     echo "There appears to be aws keys in your .env file that says 'changeme'. Please set them before proceeding."
     echo "Talk to an administrator or other developer to get the keys."
 	$REPLY = Read-Host "Do you want to continue? y/n"
-    if (($REPLY -eq "y") -or ($REPLY -eq "Y")) {
+    if (($REPLY -eq "y") -or ($REPLY -eq "Y")) 
+    {
         echo "we are continuing"
     }
     else 
@@ -218,36 +234,35 @@ if ($unsetawskey)
 if ($prereqsoption -eq "yes") 
 {
     if ( -Not (Get-Command just -errorAction SilentlyContinue) ) 
-	{
+    {
         choco install -y --no-progress just
-		refenv # could be moved to the very end
     }
 
     if ( -Not (Get-Command python -errorAction SilentlyContinue) ) 
-	{
+    {
         choco install -y --no-progress python
-		refenv # could be moved to the very end
     }
 
     if ( -Not (Get-Command nvm -errorAction SilentlyContinue) ) 
-	{
-		choco install -y --no-progress nvm
-		refenv
+    {
+        choco install -y --no-progress nvm
+        refenv
         nvm install 20
         nvm use 20
-        echo "Run . ~/.zprofile to enable nvm"
     }
 
     if ( -Not (Get-Command yarn -errorAction SilentlyContinue) ) 
 	{
         npm install -g yarn
     }
+
+    refenv
 	
     if ( -Not (Get-Command docker -errorAction SilentlyContinue) ) 
 	{
         echo "Installing Docker Desktop"
         choco install -y --no-progress docker-desktop
-		refenv # could be moved to the very end ??
+        refenv 
 		
         # echo "The Docker Desktop dmg package has been installed."
         # echo "The next step is to go to a desktop GUI window on the Mac, run Docker Desktop, and complete the installation."
