@@ -16,6 +16,10 @@ Method 1:
 
 The script dev-bootstrap-win.ps1 will automatically install prerequisites, and with the --launch flag will also run docker-compose.
 
+Enable Powershell scripts with `Set-ExecutionPolicy Bypass`.
+
+Open a Powershell terminal (Admin).
+
 ```
 curl -o dev-bootstrap-win.ps1 https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-win.ps1
 .\dev-bootstrap-win.ps1

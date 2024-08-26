@@ -5,6 +5,8 @@
 
 [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '')]
 
+#Requires -RunAsAdministrator
+
 param (
    [Parameter(Mandatory=$false)][alias("repo")][string]$repooption = "",
    [switch]$help = $false,
@@ -15,9 +17,13 @@ param (
 # set defaults:
 ${prereqsoption}="yes"
 $scriptname="dev-bootstrap-win.ps1"
-
+# Skip 1.1.12, has a bug. Go to 1.1.13 or later.
+$nvm_install_version="1.1.11"
+$node_version="20.17.0"
 # docker_mode either "native" or "desktop" (Docker Desktop). win only support "desktop" currently.
-docker_mode="desktop"
+$docker_mode="desktop"
+${sleep_longer}=10
+${sleep_shorter}=5
 
 if (${docker_mode} -eq "native")
 {
@@ -244,8 +250,20 @@ if ($prereqsoption -eq "yes")
 
     if ( -Not (Get-Command nvm -errorAction SilentlyContinue) )
     {
-        choco install -y --no-progress nvm
-        refenv
+        # 1.1.12 doesn't allow reading stdout. Will be fixed in 1.1.13 supposedly.
+        choco install -y --no-progress nvm.install --version ${nvm_install_version}
+        Write-Output "NVM was just installed. Close this terminal window, and then restart the script."
+        Write-Output "The process has not finished. Please open a new terminal window. And restart the script."
+        exit 0
+	}
+
+	if (nvm list | Select-String "${node_version}")
+	{
+        # Node already installed
+        ForEach-Object 'foo'
+	}
+	else
+	{
         nvm install 20
         nvm use 20
     }
@@ -257,23 +275,38 @@ if ($prereqsoption -eq "yes")
 
     refenv
 
+    # Check if wsl is installed
+    $console = ([console]::OutputEncoding)
+    [console]::OutputEncoding = New-Object System.Text.UnicodeEncoding
+    if (wsl --status | oss | select-string -pattern "Ubuntu") 
+    {
+	    $wslinstalled="yes"
+    }
+    else 
+    {
+        $wslinstalled="no"
+    }
+    [console]::OutputEncoding = $console
+
+    if ($wslinstalled -eq "no") 
+    {
+        wsl --install
+        Write-Output "WSL was just installed. Rebooting in ${sleep_shorter} seconds. Then complete the WSL steps if they appear, and re-run this script."
+        Start-Sleep ${sleep_shorter}
+        Restart-Computer
+    }
+
     if ( -Not (Get-Command docker -errorAction SilentlyContinue) )
     {
         Write-Output "Installing Docker Desktop"
-        choco install -y --no-progress docker-desktop
+        choco install -y --no-progress docker-desktop -ia --quiet --accept-license
         refenv
 
-        # Write-Output "The Docker Desktop dmg package has been installed."
-        # Write-Output "The next step is to go to a desktop GUI window on the Mac, run Docker Desktop, and complete the installation."
-        # Write-Output "Then return here."
-        # read -r -p "Do you want to continue? y/n" -n 1 -r
-        # Write-Output    # (optional) move to a new line
-        # if [[ $REPLY =~ ^[Yy]$ ]]
-        # then
-        #     Write-Output "we are continuing"
-        # else
-        #     Write-Output "did not receive a Yy. Exiting. You may re-run the script."
-        #     exit 1
+        Write-Output "Docker-Desktop was just installed. Rebooting in ${sleep_shorter} seconds. Then launch Docker Desktop to complete the installation."
+		Write-Output "After that, you may choose to either re-run this script with -launch,"
+        Write-Output "or run the necessary 'docker compose' steps directly to launch a local environment."
+        Start-Sleep ${sleep_shorter}
+        Restart-Computer
     }
 
     Write-Output "The 'installation' section of this script is complete."
@@ -281,7 +314,7 @@ if ($prereqsoption -eq "yes")
     Write-Output ""
     if ( ! ( "launchption" -eq "yes"))
     {
-        Write-Output "You may run this script again with the --launch option, to launch docker compose and run db migrations".
+        Write-Output "You may run this script again with the -launch option, to launch docker compose and run db migrations".
         Write-Output ""
     }
     Write-Output ${completion_message_1}
@@ -296,10 +329,11 @@ if ("$launchoption" -eq "yes")
     # fi
 
     Set-Location "${repo_path}"
+
     Write-Output "Launching docker compose"
-    Write-Output "Let's wait for that to run. Sleeping 60 seconds."
+    Write-Output "Let's wait for that to run. Sleeping ${sleep_longer} seconds."
     docker compose up -d
-    Set-Sleep 60
+    Start-Sleep ${sleep_longer}
     Write-Output "Creating superuser"
     docker compose run --rm web python manage.py createsuperuser
     Write-Output "Creating database migrations"
@@ -308,7 +342,7 @@ if ("$launchoption" -eq "yes")
     docker compose run --rm web python manage.py migrate
     Write-Output "Running yarn"
     yarn
-    yarn build
+    yarn dev-windows
     Copy-Item static/css/styles.css static_deploy/css/styles.css
     Write-Output "In your browser, visit http://localhost:8000"
     Write-Output "Later, to shut down: docker compose down"
