@@ -109,7 +109,7 @@ Write-Output "Chosen options: pre: ${prereqsoption} launch: ${launchoption} repo
 
 # Determine git repo
 
-$originurl=git config --get remote.origin.url
+$originurl=git config --get remote.origin.url 2>$null
 if ($LASTEXITCODE -eq 0)
 {
     ${detected_repo_url}=[io.path]::ChangeExtension($originurl, [NullString]::Value)
@@ -121,7 +121,7 @@ else
 
 ## detected_repo_org=$(basename $(dirname "${detected_repo_url}"))
 
-$repopath=git rev-parse --show-toplevel
+$repopath=git rev-parse --show-toplevel 2>$null
 if ($LASTEXITCODE -eq 0)
 {
     ${detected_repo_path}=$repopath | ForEach-Object {$_ -replace '/','\'}
@@ -179,7 +179,7 @@ else
     ${repo_path_base}="${repo_path_base}/${repo_org}"
     ${repo_path}="${repo_path_base}/${repo_name}"
     Write-Output "The path will be ${repo_path}"
-    mkdir -p "${repo_path_base}"
+    md -Force "${repo_path_base}"
     Set-Location "${repo_path_base}"
     if ( !(Test-Path -Path ${repo_path}))
     {
@@ -199,11 +199,10 @@ $searchresults = Select-String -pattern "STATIC_CONTENT_AWS_ACCESS_KEY_ID" .env 
 if ($null -eq $searchresults)
 {
     # "No matches found"
-	ForEach-Object 'foo'
+    ForEach-Object 'foo'
 }
 else
 {
-    "Matches found in the following files"
     $unsetawskey="yes"
 }
 
@@ -211,11 +210,10 @@ $searchresults = Select-String -pattern "STATIC_CONTENT_AWS_SECRET_ACCESS_KEY" .
 if ($null -eq $searchresults)
 {
     # "No matches found"
-	ForEach-Object 'foo'
+    ForEach-Object 'foo'
 }
 else
 {
-    "Matches found in the following files"
     $unsetawskey="yes"
 }
 
