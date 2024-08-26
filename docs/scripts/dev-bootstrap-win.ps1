@@ -1,3 +1,6 @@
+
+# TODO: remember repo in a file, in case you restart the script
+
 # Copyright 2024 Sam Darwin
 #
 # Distributed under the Boost Software License, Version 1.0.
@@ -22,18 +25,18 @@ $nvm_install_version="1.1.11"
 $node_version="20.17.0"
 # docker_mode either "native" or "desktop" (Docker Desktop). win only support "desktop" currently.
 $docker_mode="desktop"
-${sleep_longer}=10
-${sleep_shorter}=5
+${sleep_longer}=60
+${sleep_shorter}=30
 
 if (${docker_mode} -eq "native")
 {
     # Not supported on win currently, or ever.
-    ${repo_path_base}="/opt/github"
+    ${repo_path_base}="\opt\github"
     ${completion_message_1}="When doing development work, switch to the root user 'sudo su -', Set-Location to that directory location, and run 'docker compose up -d'"
 }
 if (${docker_mode} -eq "desktop")
 {
-    ${repo_path_base}="${HOME}/github"
+    ${repo_path_base}="${HOME}\github"
     ${completion_message_1}="When doing development work, Set-Location to that directory location, and run 'docker compose up -d'"
 }
 
@@ -176,8 +179,8 @@ else
 
     ${repo_org_part_1}=[io.path]::GetDirectoryName($repo_url)
     ${repo_org}=[io.path]::GetFileNameWithoutExtension($repo_org_part_1)
-    ${repo_path_base}="${repo_path_base}/${repo_org}"
-    ${repo_path}="${repo_path_base}/${repo_name}"
+    ${repo_path_base}="${repo_path_base}\${repo_org}"
+    ${repo_path}="${repo_path_base}\${repo_name}"
     Write-Output "The path will be ${repo_path}"
     md -Force "${repo_path_base}"
     Set-Location "${repo_path_base}"
@@ -224,7 +227,7 @@ if ($unsetawskey)
 	$REPLY = Read-Host "Do you want to continue? y/n"
     if (($REPLY -eq "y") -or ($REPLY -eq "Y"))
     {
-        Write-Output "we are continuing"
+        Write-Output "Continuing"
     }
     else
     {
@@ -292,6 +295,10 @@ if ($prereqsoption -eq "yes")
         Write-Output "WSL was just installed. Rebooting in ${sleep_shorter} seconds. Then complete the WSL steps if they appear, and re-run this script."
         Start-Sleep ${sleep_shorter}
         Restart-Computer
+    }
+    else
+    {
+        wsl --update
     }
 
     if ( -Not (Get-Command docker -errorAction SilentlyContinue) )
