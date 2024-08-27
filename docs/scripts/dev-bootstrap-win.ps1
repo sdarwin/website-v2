@@ -166,12 +166,12 @@ elseif ( ${detected_repo_url} -and -not (${detected_repo_url} -eq "empty") )
 }
 else
 {
-    if (${repooption} )
+    if (${repooption})
     {
         Write-Output "You have specified a repository on the command line. That will be preferred. ${repooption}"
         ${repo_url}=${repooption}
         Write-Output "${repo_url}" | Out-File ${cached_url_file}
-	}
+    }
     else
     {
         if (${detected_cached_url})
@@ -192,14 +192,19 @@ else
             $repo_url=$default_value
         }
 
-        if (!$repo_url) {
+        if (!$repo_url)
+        {
 	        Write-Output "You did not provide a git url. Exiting"
 	        exit 1
         }
-        Write-Output "repo url is now $repo_url"
+        else
+        {
+            Write-Output "repo url is now $repo_url"
+            Write-Output "${repo_url}" | Out-File ${cached_url_file}
+        }
     }
 
-	if ($repo_url)
+    if ($repo_url)
     {
         ${repo_name}=[io.path]::GetFileNameWithoutExtension($repo_url)
     }
@@ -341,6 +346,8 @@ if ($prereqsoption -eq "yes")
         Write-Output "Docker-Desktop was just installed. Rebooting in ${sleep_shorter} seconds. Then launch Docker Desktop to complete the installation."
 		Write-Output "After that, you may choose to either re-run this script with -launch,"
         Write-Output "or run the necessary 'docker compose' steps directly to launch a local environment."
+        Write-Output ""
+        Write-Output "When the system comes back up, click the Docker Desktop icon to accept the license and complete the installation."
         Start-Sleep ${sleep_shorter}
         Restart-Computer
     }
@@ -366,16 +373,22 @@ if ("$launchoption" -eq "yes")
 
     Set-Location "${repo_path}"
 
-    Write-Output "Launching docker compose"
+    Write-Output "Starting the docker compose steps"
+    Write-Output "running docker compose pull"
+    docker compose pull
+    Write-Output "docker compose up -d"
     Write-Output "Let's wait for that to run. Sleeping ${sleep_longer} seconds."
     docker compose up -d
     Start-Sleep ${sleep_longer}
-    Write-Output "Creating superuser"
+    Write-Output "running makemigrations"
     docker compose run --rm web python manage.py makemigrations
     Write-Output "running database migrations"
     docker compose run --rm web python manage.py migrate
     Write-Output "Creating superuser"
     docker compose run --rm web python manage.py createsuperuser
+    # collectstatic already done, by celery
+    # Write-Output "running collectstatic"
+    # docker compose run --rm web python manage.py collectstatic
     Write-Output "Running yarn"
     yarn
     yarn dev-windows
