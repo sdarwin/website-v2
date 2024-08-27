@@ -27,7 +27,7 @@ $node_version="20.17.0"
 $docker_mode="desktop"
 ${sleep_longer}=60
 ${sleep_shorter}=30
-${cached_url_file}="dev-bootstrap-url.cfg"
+${cached_url_file}="tmp-dev-bootstrap-url.cfg"
 ${git_branch}="develop"
 
 if (${docker_mode} -eq "native")
