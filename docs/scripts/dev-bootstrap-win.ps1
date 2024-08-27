@@ -340,11 +340,11 @@ if ("$launchoption" -eq "yes")
     docker compose up -d
     Start-Sleep ${sleep_longer}
     Write-Output "Creating superuser"
-    docker compose run --rm web python manage.py createsuperuser
-    Write-Output "Creating database migrations"
     docker compose run --rm web python manage.py makemigrations
     Write-Output "running database migrations"
     docker compose run --rm web python manage.py migrate
+    Write-Output "Creating superuser"
+    docker compose run --rm web python manage.py createsuperuser
     Write-Output "Running yarn"
     yarn
     yarn dev-windows

@@ -39,14 +39,14 @@ Then run:
 # start our services (and build them if necessary)
 $ docker compose up
 
-# to create a superuser
-$ docker compose run --rm web python manage.py createsuperuser
-
 # to create database migrations
 $ docker compose run --rm web python manage.py makemigrations
 
 # to run database migrations
 $ docker compose run --rm web python manage.py migrate
+
+# to create a superuser
+$ docker compose run --rm web python manage.py createsuperuser
 ```
 
 This will create the Docker image, install dependencies, start the services

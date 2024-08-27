@@ -271,12 +271,12 @@ if [[ "$launchoption" == "yes" ]]; then
     echo "Let's wait for that to run. Sleeping 60 seconds."
     docker compose up -d
     sleep 60
-    echo "Creating superuser"
-    docker compose run --rm web python manage.py createsuperuser
     echo "Creating database migrations"
     docker compose run --rm web python manage.py makemigrations
     echo "running database migrations"
     docker compose run --rm web python manage.py migrate
+    echo "Creating superuser"
+    docker compose run --rm web python manage.py createsuperuser
     echo "Running yarn"
     yarn
     yarn build

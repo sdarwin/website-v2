@@ -281,11 +281,11 @@ if [[ "$launchoption" == "yes" ]]; then
     ${possible_sudo} docker compose up -d
     sleep 60
     echo "Creating superuser"
-    ${possible_sudo} docker compose run --rm web python manage.py createsuperuser
-    echo "Creating database migrations"
     ${possible_sudo} docker compose run --rm web python manage.py makemigrations
     echo "running database migrations"
     ${possible_sudo} docker compose run --rm web python manage.py migrate
+    echo "Creating superuser"
+    ${possible_sudo} docker compose run --rm web python manage.py createsuperuser
     echo "Running yarn"
     if [[ "${possible_sudo}" == "sudo" ]]; then
         sudo bash -i -c 'yarn; yarn build; cp static/css/styles.css static_deploy/css/styles.css'
