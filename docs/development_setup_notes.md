@@ -1,6 +1,6 @@
 ## Development Setup Notes
 
-The procedure to configure a development environment is mainly covered in the top-level README.md. This document will contain more details about installing prerequisites: Just, Python 3.11, Docker, and Docker Compose.
+The procedure to configure a development environment is mainly covered in the top-level README.md. This document will contain more details about installing prerequisites: Just, Python, Docker, and Docker Compose.
 
 - [Development Setup Notes](#development-setup-notes)
 - [Windows](#windows)
@@ -11,6 +11,8 @@ The procedure to configure a development environment is mainly covered in the to
 
 
 ## Windows
+
+There are multiple alternatives to choose from.
 
 Method 1:
 
@@ -58,7 +60,7 @@ choco install -y --no-progress just
 Install nvm, npm, and yarn
 ```
 choco install -y --no-progress nvm
-refreshenv
+# close and open the powershell terminal (admin)
 nvm install 20
 nvm use 20
 npm install -g yarn
