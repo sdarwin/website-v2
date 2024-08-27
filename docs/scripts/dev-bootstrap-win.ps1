@@ -28,7 +28,7 @@ $docker_mode="desktop"
 ${sleep_longer}=60
 ${sleep_shorter}=30
 ${cached_url_file}="dev-bootstrap-url.cfg"
-${git_branch}="bootstrap"
+${git_branch}="develop"
 
 if (${docker_mode} -eq "native")
 {
