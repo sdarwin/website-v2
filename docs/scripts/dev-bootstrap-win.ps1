@@ -27,6 +27,8 @@ $node_version="20.17.0"
 $docker_mode="desktop"
 ${sleep_longer}=60
 ${sleep_shorter}=30
+${cached_url_file}="dev-bootstrap-url.cfg"
+${git_branch}="bootstrap"
 
 if (${docker_mode} -eq "native")
 {
@@ -136,6 +138,12 @@ else
 
 ${detected_repo_path_base}=[io.path]::GetDirectoryName($detected_repo_path)
 
+if (Test-Path ${cached_url_file})
+{
+    $detected_cached_url = Get-Content ${cached_url_file} -Raw
+    $detected_cached_url = $detected_cached_url.Trim()
+}
+
 if ( ${detected_repo_url} -and -not (${detected_repo_url} -eq "empty") -and ${repooption} )
 {
     Write-Output "You have specified a repo, but you are also running this script from within a repo."
@@ -162,10 +170,33 @@ else
     {
         Write-Output "You have specified a repository on the command line. That will be preferred. ${repooption}"
         ${repo_url}=${repooption}
+        Write-Output "${repo_url}" | Out-File ${cached_url_file}
 	}
     else
     {
-        $repo_url = Read-Host "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
+        if (${detected_cached_url})
+        {
+            $extra_text="[Hit enter to accept default value ${detected_cached_url}]"
+	        $default_value=${detected_cached_url}
+        }
+        else
+        {
+            $extra_text=""
+            $default_value=""
+        }
+
+        $repo_url = Read-Host "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2 ${extra_text}"
+
+        if (!$repo_url)
+        {
+            $repo_url=$default_value
+        }
+
+        if (!$repo_url) {
+	        Write-Output "You did not provide a git url. Exiting"
+	        exit 1
+        }
+        Write-Output "repo url is now $repo_url"
     }
 
 	if ($repo_url)
@@ -174,7 +205,7 @@ else
     }
     else
     {
-        ${detected_repo_url}="empty"
+        ${repo_name}="empty"
     }
 
     ${repo_org_part_1}=[io.path]::GetDirectoryName($repo_url)
@@ -182,11 +213,11 @@ else
     ${repo_path_base}="${repo_path_base}\${repo_org}"
     ${repo_path}="${repo_path_base}\${repo_name}"
     Write-Output "The path will be ${repo_path}"
-    md -Force "${repo_path_base}"
+    mkdir -Force "${repo_path_base}"
     Set-Location "${repo_path_base}"
     if ( !(Test-Path -Path ${repo_path}))
     {
-        git clone "${repo_url}"
+        git clone -b ${git_branch} "${repo_url}"
     }
     Set-Location "${repo_name}"
     if ( !(Test-Path .env))
@@ -279,17 +310,17 @@ if ($prereqsoption -eq "yes")
     # Check if wsl is installed
     $console = ([console]::OutputEncoding)
     [console]::OutputEncoding = New-Object System.Text.UnicodeEncoding
-    if (wsl --status | oss | select-string -pattern "Ubuntu") 
+    if (wsl --status | oss | select-string -pattern "Ubuntu")
     {
 	    $wslinstalled="yes"
     }
-    else 
+    else
     {
         $wslinstalled="no"
     }
     [console]::OutputEncoding = $console
 
-    if ($wslinstalled -eq "no") 
+    if ($wslinstalled -eq "no")
     {
         wsl --install
         Write-Output "WSL was just installed. Rebooting in ${sleep_shorter} seconds. Then complete the WSL steps if they appear, and re-run this script."
