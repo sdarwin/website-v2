@@ -66,13 +66,13 @@ exit 0
 if ($launch)
 {
     ${launchoption} = "yes"
-	${prereqsoption}="no"
+    ${prereqsoption}="no"
 }
 
 if ($all)
 {
     ${launchoption} = "yes"
-	${prereqsoption}="yes"
+    ${prereqsoption}="yes"
 }
 
 function refenv
@@ -177,7 +177,7 @@ else
         if (${detected_cached_url})
         {
             $extra_text="[Hit enter to accept default value ${detected_cached_url}]"
-	        $default_value=${detected_cached_url}
+            $default_value=${detected_cached_url}
         }
         else
         {
@@ -237,9 +237,9 @@ $a_docker_filename=".\docker\compose-start.sh"
 if ((Get-Content $a_docker_filename -Raw) -match "\r\n$")
 {
     Write-Output "${a_docker_filename} has windows line endings. The docker/ folder needs to have unix line endings."
-	Write-Output "The .gitattributes file should already fix this. Check out a new copy of the repository "
-	Write-Output "and then re-run this script."
-	exit 1
+    Write-Output "The .gitattributes file should already fix this. Check out a new copy of the repository "
+    Write-Output "and then re-run this script."
+    exit 1
 }
 
 # Check .env file
@@ -270,7 +270,7 @@ if ($unsetawskey)
 {
     Write-Output "There appears to be aws keys in your .env file that says 'changeme'. Please set them before proceeding."
     Write-Output "Talk to an administrator or other developer to get the keys."
-	$REPLY = Read-Host "Do you want to continue? y/n"
+    $REPLY = Read-Host "Do you want to continue? y/n"
     if (($REPLY -eq "y") -or ($REPLY -eq "Y"))
     {
         Write-Output "Continuing"
@@ -302,15 +302,15 @@ if ($prereqsoption -eq "yes")
         Write-Output "NVM was just installed. Close this terminal window, and then restart the script."
         Write-Output "The process has not finished. Please open a new terminal window. And restart the script."
         exit 0
-	}
+    }
 
-	if (nvm list | Select-String "${node_version}")
-	{
+    if (nvm list | Select-String "${node_version}")
+    {
         # Node already installed
         ForEach-Object 'foo'
-	}
-	else
-	{
+    }
+    else
+    {
         nvm install 20
         nvm use 20
     }
@@ -327,7 +327,7 @@ if ($prereqsoption -eq "yes")
     [console]::OutputEncoding = New-Object System.Text.UnicodeEncoding
     if (wsl --status | oss | select-string -pattern "Ubuntu")
     {
-	    $wslinstalled="yes"
+        $wslinstalled="yes"
     }
     else
     {
@@ -354,7 +354,7 @@ if ($prereqsoption -eq "yes")
         refenv
 
         Write-Output "Docker-Desktop was just installed. Rebooting in ${sleep_shorter} seconds. Then launch Docker Desktop to complete the installation."
-		Write-Output "After that, you may choose to either re-run this script with -launch,"
+        Write-Output "After that, you may choose to either re-run this script with -launch,"
         Write-Output "or run the necessary 'docker compose' steps directly to launch a local environment."
         Write-Output ""
         Write-Output "When the system comes back up, click the Docker Desktop icon to accept the license and complete the installation."
