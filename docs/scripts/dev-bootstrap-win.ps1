@@ -231,8 +231,18 @@ else
     }
 }
 
-# Check .env file
+# On windows, the docker/ folder needs to have EOL=lf.
 
+$a_docker_filename=".\docker\compose-start.sh"
+if ((Get-Content $a_docker_filename -Raw) -match "\r\n$")
+{
+    Write-Output "${a_docker_filename} has windows line endings. The docker/ folder needs to have unix line endings."
+	Write-Output "The .gitattributes file should already fix this. Check out a new copy of the repository "
+	Write-Output "and then re-run this script."
+	exit 1
+}
+
+# Check .env file
 
 $searchresults = Select-String -pattern "STATIC_CONTENT_AWS_ACCESS_KEY_ID" .env | Select-String -pattern "changeme"
 if ($null -eq $searchresults)
