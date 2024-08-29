@@ -87,7 +87,7 @@ while true ; do
             helpmessage="""
 usage: $scriptname [-h] [--repo REPO] [--launch] [--all]
 
-Install all required packages (this is the default action), launch docker-compose, or both. 
+Install all required packages (this is the default action), launch docker-compose, or both.
 
 optional arguments:
   -h, --help            Show this help message and exit
@@ -145,7 +145,7 @@ else
     if [ -n "${repooption}" ]; then
         echo "You have specified a repository on the command line. That will be preferred. ${repooption}"
         repo_url=${repooption}
-    else 
+    else
         echo "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
         read -r repo_url
     fi

@@ -43,7 +43,7 @@ while true ; do
             helpmessage="""
 usage: $scriptname [-h] [--repo REPO] [--launch] [--all]
 
-Install all required packages (this is the default action), launch docker-compose, or both. 
+Install all required packages (this is the default action), launch docker-compose, or both.
 
 optional arguments:
   -h, --help            Show this help message and exit

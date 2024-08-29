@@ -18,11 +18,11 @@ Method 1:
 
 The script dev-bootstrap-win.ps1 will automatically install prerequisites, and with the -all or -launch flag will also run docker-compose.
 
-Open a Powershell terminal (Admin).
+Open a Powershell terminal (Admin mode).
 
 Enable Powershell scripts with `Set-ExecutionPolicy Bypass`.
 
-Clone your fork of the repo, and run the script `docs/scripts/dev-bootstrap-win.ps1`, or just download a copy of the script by itself, and run it.  
+Clone your fork of the repo, and run the script `docs/scripts/dev-bootstrap-win.ps1`, or just download a copy of the script by itself, and run it.
 
 ```
 curl -o dev-bootstrap-win.ps1 https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-win.ps1
@@ -201,11 +201,11 @@ Edit the .env, adding AWS keys.
 Continue (as the root user) to the instructions in the top-level README.md file. Or if using WSL, review the last few steps in that section again.
 
 On Linux, the advantage of running `docker compose` as root is the userid (0) will match the containers and the shared files. Another option is
-to install Docker Desktop, which would allow you to stay as a regular user.  
+to install Docker Desktop, which would allow you to stay as a regular user.
 
 ## macOS
 
-Method 1: 
+Method 1:
 
 The script dev-bootstrap-macos.sh will automatically install prerequisites, and with the --all or --launch flag will also run docker-compose.
 
@@ -276,7 +276,7 @@ cp env.template .env
 
 Edit the .env, adding AWS keys.
 
-Continue to the instructions in the top-level README.md file. 
+Continue to the instructions in the top-level README.md file.
 
 ## Local Development
 
