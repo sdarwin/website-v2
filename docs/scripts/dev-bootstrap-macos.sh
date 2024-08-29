@@ -7,8 +7,6 @@
 
 set -e
 # set -x
-# shopt -s extglob
-# shopt -s dotglob
 
 scriptname="dev-bootstrap-macos.sh"
 if [[ "$(uname -p)" =~ "arm" ]]; then

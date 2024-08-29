@@ -7,8 +7,6 @@
 
 set -e
 # set -x
-# shopt -s extglob
-# shopt -s dotglob
 
 scriptname="dev-bootstrap-linux.sh"
 
@@ -53,8 +51,8 @@ optional arguments:
 """
 
             echo ""
-	    echo "$helpmessage" ;
-	    echo ""
+            echo "$helpmessage" ;
+            echo ""
             exit 0
             ;;
         --repo)
@@ -117,7 +115,7 @@ else
     if [ -n "${repooption}" ]; then
         echo "You have specified a repository on the command line. That will be preferred. ${repooption}"
         repo_url=${repooption}
-    else 
+    else
         echo "Please enter a full git repository url with a format such as https:://github.com/_your_name_/website-v2"
         read -r repo_url
     fi
@@ -236,6 +234,7 @@ if [[ "$prereqsoption" == "yes" ]]; then
         sudo install -m 0755 -d /etc/apt/keyrings
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
         sudo chmod a+r /etc/apt/keyrings/docker.gpg
+        # shellcheck disable=SC1091
         echo \
           deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
           "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable | \

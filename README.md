@@ -66,7 +66,7 @@ npm install -g yarn
 ```
 # Each time - rebuild styles.css
 yarn
-yarn build
+yarn build  # or on windows: yarn dev-windows
 cp static/css/styles.css static_deploy/css/styles.css
 ```
 
