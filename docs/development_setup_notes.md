@@ -16,7 +16,7 @@ There are multiple alternatives to choose from.
 
 Method 1:
 
-The script dev-bootstrap-win.ps1 will automatically install prerequisites, and with the --launch flag will also run docker-compose.
+The script dev-bootstrap-win.ps1 will automatically install prerequisites, and with the -all or -launch flag will also run docker-compose.
 
 Open a Powershell terminal (Admin).
 
@@ -31,7 +31,7 @@ curl -o dev-bootstrap-win.ps1 https://raw.githubusercontent.com/boostorg/website
 
 Method 2:
 
-Instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
+Or, instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
 
 Install choco
 ```
@@ -88,7 +88,7 @@ Continue to the instructions in the top-level README.md file.
 
 Method 3:
 
-In WSL. This is a more complicated method.
+This is a more complicated WSL method.
 
 In Powershell, install WSL:
 ```
@@ -122,7 +122,9 @@ Continue (as root) to the instructions in the top-level README.md file.
 
 Method 1:
 
-The script dev-bootstrap-linux.sh will automatically install prerequisites, and with the --launch flag will also run docker-compose.
+The script dev-bootstrap-linux.sh will automatically install prerequisites, and with the --all or --launch flag will also run docker-compose.
+
+While the dev-bootstrap-linux.sh script should be run as a standard user, after it has been all set up, later you will generally run "docker compose" as root. This is to assure that the permissions match inside the container where the user is also root. (Another option is to eventually add a Docker Desktop method for linux to the script).
 
 ```
 curl -o dev-bootstrap-linux.sh https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-linux.sh
@@ -132,7 +134,7 @@ chmod 755 dev-bootstrap-linux.sh
 
 Method 2:
 
-Instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
+Or, instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
 
 Install python
 ```
@@ -205,7 +207,9 @@ to install Docker Desktop, which would allow you to stay as a regular user.
 
 Method 1: 
 
-The script dev-bootstrap-macos.sh will automatically install prerequisites, and with the --launch flag will also run docker-compose.
+The script dev-bootstrap-macos.sh will automatically install prerequisites, and with the --all or --launch flag will also run docker-compose.
+
+As a standard user account, clone your fork of the repo, and run the script `docs/scripts/dev-bootstrap-macos.ps1`, or just download a copy of the script by itself, and run it.
 
 ```
 curl -o dev-bootstrap-macos.sh https://raw.githubusercontent.com/boostorg/website-v2/develop/docs/scripts/dev-bootstrap-macos.sh
@@ -215,7 +219,7 @@ chmod 755 dev-bootstrap-macos.sh
 
 Method 2:
 
-Instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.  
+Or, instead of running the script, manually install the necessary packages as discussed below. It's only necessary to run each command if that package is missing.
 
 Install brew
 ```
