@@ -1,11 +1,39 @@
 #!/bin/bash
-set -xe
-[ -f ".env" ] || { echo "Error: .env file not found"; exit 1; }
-# shellcheck disable=SC1091
-source .env
+set -ex
+
+###################################################
+
+: '
+
+# Instructions to import mailing list
+
+# switch to root
+sudo su -
+# Clone this repo if not already done. For example:
+mkdir -p /opt/github/boostorg
+cd /opt/github/boostorg
+git clone https://github.com/boostorg/website-v2
+cd website-v2
+# Install prerequisites:
+./docs/scripts/dev-bootstrap-linux.sh
+# Run the import:
+./scripts/load_production_data.sh --only-lists
+# Query data, option 1, via psql cli:
+    psql -h localhost -U postgres -d lists_production_web -c "select * from hyperkitty_email limit 1;"
+# Query data, option 2, connect to session with psql:
+    psql -h localhost -U postgres
+    \l
+    \c lists_production_web
+    select * from hyperkitty_email limit 1;
+# BTW - if analyzing the core db, a member shouldnt be official until (at least) they have verified/confirmed.  
+
+'
+
+####################################################
+
 
 # READ IN COMMAND-LINE OPTIONS
-TEMP=$(getopt --long help::,lists::,only-lists:: -- "$@")
+TEMP=$(getopt -o h:: --long help::,lists::,only-lists:: -- "$@")
 eval set -- "$TEMP"
 
 # extract options and their arguments into variables.
@@ -36,6 +64,10 @@ optional arguments:
         *) echo "Internal error!" ; exit 1 ;;
     esac
 done
+
+[ -f ".env" ] || { echo "Error: .env file not found"; exit 1; }
+# shellcheck disable=SC1091
+source .env
 
 download_media_file() {
     # download all files from the PROD_MEDIA_CONTENT bucket and copy to Docker container
@@ -92,12 +124,12 @@ download_latest_db_dump() {
         DB_WILDCARD="PROD_DB_DUMP_FILE_WILDCARD"
         DB_NAME=$(grep PGDATABASE .env | cut -d= -f2)
         DB_USER=$(grep PGUSER .env | cut -d= -f2)
-    elif [ "$1" = "list_core_db" ]; then
+    elif [ "$1" = "lists_core_db" ]; then
         DB_URL="PROD_LISTS_CORE_DB_DUMP_URL"
         DB_WILDCARD="PROD_LISTS_CORE_DB_DUMP_FILE_WILDCARD"
         DB_NAME="lists_production_core"
         DB_USER=$(grep PGUSER .env | cut -d= -f2)
-    elif [ "$1" = "list_web_db" ]; then
+    elif [ "$1" = "lists_web_db" ]; then
         DB_URL="PROD_LISTS_WEB_DB_DUMP_URL"
         DB_WILDCARD="PROD_LISTS_WEB_DB_DUMP_FILE_WILDCARD"
         DB_NAME="lists_production_web"
