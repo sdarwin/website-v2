@@ -599,3 +599,29 @@ def test_static_content_context_defers_the_header_auth_state(request_factory):
     view.content_dict = {"content": b"= Title", "content_type": "text/asciidoc"}
 
     assert view.get_context_data()["defer_auth_state"] is True
+
+
+def test_flower_auth_anonymous_user(tp):
+    tp.response_403(tp.get("flower-auth"))
+
+
+def test_flower_auth_regular_user(tp, user):
+    tp.login(user)
+    tp.response_403(tp.get("flower-auth"))
+
+
+def test_flower_auth_inactive_staff_user(tp, staff_user):
+    staff_user.is_active = False
+    staff_user.save()
+    tp.client.force_login(staff_user)
+    tp.response_403(tp.get("flower-auth"))
+
+
+def test_flower_auth_staff_user(tp, staff_user):
+    tp.login(staff_user)
+    tp.response_204(tp.get("flower-auth"))
+
+
+def test_flower_auth_only_allows_get(tp, staff_user):
+    tp.login(staff_user)
+    tp.response_405(tp.post("flower-auth"))
