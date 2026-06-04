@@ -28,6 +28,8 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from django.views.generic import TemplateView
 
 from core.templatetags.custom_static import large_static
@@ -2270,3 +2272,46 @@ class V3ComponentDemoView(V3Mixin, TemplateView):
         }
 
         return context
+
+
+@csrf_exempt
+@require_GET
+def flower_auth(request):
+    """Auth subrequest endpoint for the nginx `auth_request` directive.
+
+    Used to gate the in-cluster Flower dashboard exposed at /flower/ via the
+    nginx sidecar in the boost pod. nginx invokes this view once per HTTP
+    request to /flower/* (including every CSS/JS/image asset) and decides
+    whether to proxy the request to the Flower pod based on the response.
+
+    Returns:
+      * 204 No Content -- user is authenticated, active, and is_staff;
+                          nginx allows the proxy to proceed.
+      * 403 Forbidden  -- everyone else; nginx maps this to a 302 to
+                          /accounts/login/?next=... via its `error_page`
+                          directive in the /flower/ location.
+
+    Constraints (do not "fix" these without understanding why):
+
+      * Must be GET-only. nginx's auth_request always issues a GET subrequest
+        regardless of the original request method, so accepting anything else
+        is dead code (and a CSRF surface).
+
+      * Must NOT redirect. nginx treats any non-2xx as failure; a 302 (which
+        is what `@login_required` would default to) surfaces to the end user
+        as an opaque 500. Returning 403 here is what gives nginx the signal
+        to run the configured error_page redirect to the login form.
+
+      * Must be fast and side-effect-free. This is in the hot path for every
+        Flower asset request. If the cost ever matters, the right answer is
+        nginx-level caching (auth_request_set + proxy_cache keyed on the
+        session cookie), NOT moving the check elsewhere.
+
+      * Relies on the session cookie being forwarded by nginx via
+        `proxy_set_header Cookie $http_cookie;`. Standard Django session
+        middleware does the rest -- no special integration needed.
+    """
+    user = request.user
+    if user.is_authenticated and user.is_active and user.is_staff:
+        return HttpResponse(status=204)
+    return HttpResponse(status=403)

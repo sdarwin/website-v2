@@ -58,6 +58,60 @@ data:
           add_header Content-Type text/plain;
       }
 
+      {{- if .Values.flowerInstall }}
+
+      resolver kube-dns.kube-system.svc.cluster.local valid=300s ipv6=off;
+
+      location /flower/ {
+          # Subrequest to Django for "is this user a staff session?". The path is
+          # served by the catch-all `location /` -> @django1 -> gunicorn, so no
+          # dedicated nginx block is needed for it (see comment block at top).
+          # nginx treats:
+          #   2xx -> success, request proceeds
+          #   401/403 -> trigger error_page below
+          #   anything else -> 500 to the client
+          # The Django view is written to return only 204 or 403, so the contract
+          # is clean.
+          auth_request          /internal/flower-auth/;
+          error_page 401 403 = @flower_login_redirect;
+
+          # Variable-in-proxy_pass forces per-request DNS lookup via the `resolver`
+          # above. With a bare literal like `proxy_pass http://flower:5555;` nginx
+          # would resolve once at startup and crash the whole config on failure.
+          # IMPORTANT: no trailing slash on the URL — we want the full /flower/
+          # prefix forwarded to Flower, which was started with --url-prefix=flower
+          # and expects to see it.
+          set $flower_upstream "flower:5555";
+          proxy_pass http://$flower_upstream;
+
+          # Standard reverse-proxy headers (the surrounding server block already
+          # sets these for the Django location blocks; listing them here is
+          # explicit and harmless).
+          proxy_set_header Host              $host;
+          proxy_set_header X-Real-IP         $remote_addr;
+          proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          # WebSocket upgrade. Flower's dashboard polls task events over a WS
+          # connection; without these three lines the UI loads but never refreshes.
+          proxy_http_version 1.1;
+          proxy_set_header   Upgrade    $http_upgrade;
+          proxy_set_header   Connection "upgrade";
+
+          # Long-lived WebSocket connections; default 60s would tear them down.
+          proxy_read_timeout 3600s;
+          proxy_send_timeout 3600s;
+      }
+
+      # Where unauthenticated users go. Using `?next=` lets Django bounce them
+      # back to /flower/... after login. `is_safe_url`-style protection in Django's
+      # login view will allow the same-host redirect.
+      location @flower_login_redirect {
+          return 302 /accounts/login/?next=$request_uri;
+      }
+
+      {{- end }}
+
       location @django1 {
           proxy_pass http://unix:/run/gunicorn.sock;
           proxy_intercept_errors on;

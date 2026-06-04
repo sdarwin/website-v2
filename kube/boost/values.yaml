@@ -212,3 +212,6 @@ gatewayType: "none"
 certmap: "revsys-certmap"
 redisInstall: false
 celeryInstall: false
+# Flower (Celery monitoring UI) proxied through the boost-pod nginx sidecar
+# at /flower/. Off by default; enable per-environment.
+flowerInstall: false

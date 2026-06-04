@@ -283,4 +283,5 @@ gatewayStaticIp: boost-io-ingress1
 gatewayStaticIpv6: production-gateway-ipv6
 redisInstall: false
 celeryInstall: true
+flowerInstall: false
 hpaMinReplicas: 4

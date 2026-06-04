@@ -285,4 +285,5 @@ gatewayStaticIp: cppal-dev-ingress1
 gatewayStaticIpv6: cppal-dev-gateway-ipv6
 redisInstall: false
 celeryInstall: true
+flowerInstall: true
 hpaMinReplicas: 2

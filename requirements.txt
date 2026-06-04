@@ -240,6 +240,8 @@ filelock==3.20.3
     # via virtualenv
 filetype==1.2.0
     # via willow
+flower==2.0.1
+    # via -r ./requirements.in
 fonttools==4.61.1
     # via matplotlib
 frozenlist==1.8.0
